@@ -8,6 +8,21 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  String? _errorMessage;
+
+  void _handleLogin() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      setState(() => _errorMessage = 'TU CORREO Y CONTRASEÑA SON REQUERIDOS');
+      return;
+    } else if (_emailController.text == "trt" &&
+        _passwordController.text == "TRT") {
+      Navigator.pushReplacementNamed(context, 'firebase');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -38,28 +53,80 @@ class _LoginScreenState extends State<LoginScreen> {
               const Image(
                 image: AssetImage(logoImage),
               ),
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 15),
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(
+                        color: errorMessageColor, fontWeight: FontWeight.w800),
+                  ),
+                ),
+
+              // Email
+              Container(
+                width: horizontalMargin,
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12.0)),
+                child: TextField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.visiblePassword,
+                  decoration: const InputDecoration(
+                    labelText: 'Usuario',
+                    labelStyle: TextStyle(
+                      color: Color(0xFFBEBCBC),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.all(12.0),
+                  ),
+                  onChanged: (value) {},
+                ),
+              ),
+
+              // Spacing
+              SizedBox(
+                height: spacingBetweenElements,
+              ),
+
+              // Password
+              Container(
+                width: horizontalMargin,
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12.0)),
+                child: TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  keyboardType: TextInputType.visiblePassword,
+                  decoration: const InputDecoration(
+                    labelText: 'Contraseña',
+                    labelStyle: TextStyle(
+                      color: Color(0xFFBEBCBC),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.all(12.0),
+                  ),
+                  onChanged: (value) {},
+                ),
+              ),
+
+              // Spacing
+              SizedBox(
+                height: spacingBetweenElements,
+              ),
 
               // Button
               ElevatedButton(
-                onPressed: () {},
+                onPressed: _handleLogin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(buttonColor),
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Inicia con Google',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    SizedBox(
-                      width: 5,
-                    ),
-                    Icon(
-                      Icons.login_rounded,
-                      color: Colors.white,
-                    )
-                  ],
+                child: const Text(
+                  'Iniciar Sesión',
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
             ],
