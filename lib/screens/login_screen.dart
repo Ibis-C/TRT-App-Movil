@@ -10,10 +10,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _emailController =
+      TextEditingController(text: 'tresreyestacos@gmail.com');
   final _passwordController = TextEditingController();
   final AuthenticationService _auth = AuthenticationService();
   String? _errorMessage;
+  bool _isButtonDisabled = false;
+  bool _hidePassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -88,20 +91,39 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12.0)),
-                child: TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  keyboardType: TextInputType.visiblePassword,
-                  decoration: const InputDecoration(
-                    labelText: 'Contraseña',
-                    labelStyle: TextStyle(
-                      color: Color(0xFFBEBCBC),
-                      fontWeight: FontWeight.w700,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _passwordController,
+                        obscureText: _hidePassword,
+                        keyboardType: TextInputType.visiblePassword,
+                        decoration: const InputDecoration(
+                          labelText: 'Contraseña',
+                          labelStyle: TextStyle(
+                            color: Color(0xFFBEBCBC),
+                            fontWeight: FontWeight.w700,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.all(12.0),
+                        ),
+                        onChanged: (value) {},
+                      ),
                     ),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(12.0),
-                  ),
-                  onChanged: (value) {},
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: IconButton(
+                        icon: _hidePassword
+                            ? const Icon(Icons.visibility_rounded)
+                            : const Icon(Icons.visibility_off_rounded),
+                        onPressed: () {
+                          setState(() {
+                            _hidePassword = !_hidePassword;
+                          });
+                        },
+                      ),
+                    )
+                  ],
                 ),
               ),
 
@@ -112,33 +134,61 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Button
               ElevatedButton(
-                onPressed: () async {
-                  if (_emailController.text.isEmpty ||
-                      _passwordController.text.isEmpty) {
-                    setState(() => _errorMessage =
-                        'TU CORREO Y CONTRASEÑA SON REQUERIDOS');
-                    return;
-                  } else {
-                    var loginResult = await _auth.singInWithEmailAndPassword(
-                        _emailController.text, _passwordController.text);
-                    if (loginResult == 1 || loginResult == 2) {
-                      setState(() =>
-                          _errorMessage = 'ERROR EN EL USUARIO O CONTRASEÑA');
-                    } else if (loginResult != null) {
-                      Navigator.pushReplacementNamed(context, 'homePage');
-                    } else {
-                      setState(() => _errorMessage =
-                          'ERROR AL INICIAR SESIÓN. INTENTALO DE NUEVO');
-                    }
-                  }
-                },
+                onPressed: _isButtonDisabled
+                    ? null
+                    : () async {
+                        setState(() {});
+                        _isButtonDisabled = true;
+                        if (_emailController.text.isEmpty ||
+                            _passwordController.text.isEmpty) {
+                          setState(() {
+                            _errorMessage =
+                                'TU CORREO Y CONTRASEÑA SON REQUERIDOS';
+                            _isButtonDisabled = false;
+                          });
+                          return;
+                        } else {
+                          var loginResult =
+                              await _auth.singInWithEmailAndPassword(
+                                  _emailController.text,
+                                  _passwordController.text);
+                          if (loginResult == 1 || loginResult == 2) {
+                            setState(() {
+                              _errorMessage =
+                                  'ERROR EN EL USUARIO O CONTRASEÑA';
+                              _isButtonDisabled = false;
+                            });
+                          } else if (loginResult != null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Center(child: Text("Bienvenido")),
+                              ),
+                            );
+                            Navigator.pushReplacementNamed(context, 'homePage');
+                          } else {
+                            setState(() {
+                              _errorMessage =
+                                  'ERROR AL INICIAR SESIÓN. INTENTALO DE NUEVO';
+                              _isButtonDisabled = false;
+                            });
+                          }
+                        }
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(buttonColor),
                 ),
-                child: const Text(
-                  'Iniciar Sesión',
-                  style: TextStyle(color: Colors.white),
-                ),
+                child: _isButtonDisabled
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Iniciar Sesión',
+                        style: TextStyle(color: Colors.white),
+                      ),
               ),
             ],
           ),
