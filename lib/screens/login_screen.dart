@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../services/services.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -10,18 +12,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
+  final AuthenticationService _auth = AuthenticationService();
   String? _errorMessage;
-
-  void _handleLogin() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      setState(() => _errorMessage = 'TU CORREO Y CONTRASEÑA SON REQUERIDOS');
-      return;
-    } else if (_emailController.text == "trt" &&
-        _passwordController.text == "TRT") {
-      Navigator.pushReplacementNamed(context, 'firebase');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +112,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Button
               ElevatedButton(
-                onPressed: _handleLogin,
+                onPressed: () async {
+                  if (_emailController.text.isEmpty ||
+                      _passwordController.text.isEmpty) {
+                    setState(() => _errorMessage =
+                        'TU CORREO Y CONTRASEÑA SON REQUERIDOS');
+                    return;
+                  } else {
+                    var loginResult = await _auth.singInWithEmailAndPassword(
+                        _emailController.text, _passwordController.text);
+                    if (loginResult == 1 || loginResult == 2) {
+                      setState(() =>
+                          _errorMessage = 'ERROR EN EL USUARIO O CONTRASEÑA');
+                    } else if (loginResult != null) {
+                      Navigator.pushReplacementNamed(context, 'homePage');
+                    } else {
+                      setState(() => _errorMessage =
+                          'ERROR AL INICIAR SESIÓN. INTENTALO DE NUEVO');
+                    }
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(buttonColor),
                 ),
