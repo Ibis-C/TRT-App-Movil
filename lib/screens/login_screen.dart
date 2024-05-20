@@ -12,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController =
       TextEditingController(text: 'tresreyestacos@gmail.com');
-  final _passwordController = TextEditingController();
+  final _passwordController = TextEditingController(text: '*pa.tu.chesco!');
   final AuthenticationService _auth = AuthenticationService();
   String? _errorMessage;
   bool _isButtonDisabled = false;
@@ -21,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final horizontalMargin = size.width * 0.8;
+    final containerTextFieldWidth = size.width * 0.8;
     final spacingBetweenElements = size.height * 0.03;
     const backgroundColor = 0xFFFB3E03;
     const errorMessageColor = Colors.black;
@@ -60,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Email
               Container(
-                width: horizontalMargin,
+                width: containerTextFieldWidth,
                 decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12.0)),
@@ -87,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Password
               Container(
-                width: horizontalMargin,
+                width: containerTextFieldWidth,
                 decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12.0)),
@@ -164,7 +164,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 content: Center(child: Text("Bienvenido")),
                               ),
                             );
-                            Navigator.pushReplacementNamed(context, 'homePage');
+                            Navigator.pushReplacementNamed(
+                                context, 'takeOrders');
                           } else {
                             setState(() {
                               _errorMessage =

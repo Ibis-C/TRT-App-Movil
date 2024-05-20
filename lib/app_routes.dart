@@ -19,7 +19,11 @@ class AppRoutes {
     MenuOptionModel(
       route: 'addName',
       screen: const AddNameScreen(),
-    )
+    ),
+    MenuOptionModel(
+      route: 'takeOrders',
+      screen: const TakeOrdersScreen(),
+    ),
   ];
 
   static Map<String, Widget Function(BuildContext)> getAppRoutes() {
