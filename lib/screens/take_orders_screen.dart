@@ -41,10 +41,26 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
     ProductModel('Coca cola', 20, 'bebida')
   ];
 
-  List<PlateModel> order = [PlateModel(1)];
+  // Seleccion de filtro en cada uno de los productos del plato
+  List<ProductModel?> listProductModelSelected = [
+    null,
+  ];
+
+  //
+  List<ProductTypeModel> listOfFiltersPerElementOnAPlate = [
+    ProductTypeModel(null, null),
+  ];
+
+  List<List<ProductModel>> listOfFilteredlists = [
+    [],
+  ];
+
+  List<PlateModel> order = [
+    // Una orden tiene un plato, cada plato tiene un número y cada plato tiene una lista de productos y a cada producto se le pasa los datos del producto
+    PlateModel(1, [ProductOrderModel(null)])
+  ];
 
   OrderTypeModel? selectedOptionOrderType;
-  ProductTypeModel? selectedOptionProductType;
 
   final _customerNameController = TextEditingController();
 
@@ -52,6 +68,7 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final containerTextFieldWidth = size.width * 0.9;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFFB3E03),
@@ -126,252 +143,286 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                 onChanged: (value) {},
               ),
             ),
-            // Hacer el .map.toList
-            filterMenuOptions(),
-            selectMenuItem(order[0].plateNumber, size)
+            selectMenuItem(order[0].plateNumber, size, order)
           ],
         ),
       ),
     );
   }
 
-  Widget filterMenuOptions() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(top: 10),
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: filters.map((productTypeModelOption) {
-          return Container(
-            padding: const EdgeInsets.only(right: 7.0), // Ajuste de padding
-            child: Row(
-              children: [
-                Radio<ProductTypeModel>(
-                  activeColor: Colors.white,
-                  value: productTypeModelOption,
-                  groupValue: selectedOptionProductType,
-                  onChanged: (ProductTypeModel? value) {
-                    setState(() {
-                      selectedOptionProductType = value;
-                      print('TIPO DE FILTRO: ${selectedOptionProductType?.id}');
-                    });
-                  },
-                ),
-                Text(
-                  productTypeModelOption.name,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ), // Sin SizedBox
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget selectMenuItem(int plateNumber, Size size) {
+  Widget selectMenuItem(int plateNumber, Size size, List<PlateModel> order) {
     int pN = plateNumber - 1;
     return Expanded(
       child: SingleChildScrollView(
         child: Column(
           children: [
             // TITULO PLATO
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 2,
-                    color: Colors.black,
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 2,
+                      color: Colors.black,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'Plato ${order.length}',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w800, fontSize: 20),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Container(
-                    height: 2,
-                    color: Colors.black,
+                  const SizedBox(width: 10),
+                  Text(
+                    'Plato ${order.length}',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 20),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Container(
+                      height: 2,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
             ),
 
             // CANTIDAD Y SELECCION DE PRODUCTO
             ListView.builder(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
-              itemBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.only(top: 15),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // BOTON DE RESTAR
-                        IconButton(
-                          color: Colors.black,
-                          onPressed: () {
-                            setState(() {
-                              order[pN].productsOrdered[index].decrement();
-                              print(order[pN]
-                                  .productsOrdered[index]
-                                  .amountController
-                                  .text);
-                              if (order[pN].productsOrdered[index].amount ==
-                                      0 &&
-                                  order[pN].productsOrdered.length > 1) {
-                                print('SOY EL INDICE $index');
-                                order[pN].deleteProduct(index);
-                                order[pN]
-                                    .productsOrdered[
-                                        order[pN].productsOrdered.length - 1]
-                                    .lastOne = true;
-                              }
-                            });
-                          },
-                          icon: const Icon(Icons.remove),
-                        ),
+              itemBuilder: (context, index) => Column(
+                children: [
+                  // FILTRO DE PRODUCTOS
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: filters.map((productTypeModelOption) {
+                        return Container(
+                          padding: const EdgeInsets.only(right: 7.0),
+                          child: Row(
+                            children: [
+                              Radio<ProductTypeModel>(
+                                activeColor: Colors.white,
+                                value: productTypeModelOption,
+                                groupValue:
+                                    listOfFiltersPerElementOnAPlate[index],
+                                onChanged: (ProductTypeModel? value) {
+                                  setState(() {
+                                    // Asignar el filtro a la lista en la posición que le corresponde
+                                    listOfFiltersPerElementOnAPlate[index] =
+                                        value!;
 
-                        // INPUT DE CANTIDAD DE PRODUCTO
-                        Container(
-                          width: size.width * 0.12,
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12)),
-                          child: TextField(
-                            textAlign: TextAlign.center,
-                            decoration:
-                                const InputDecoration(border: InputBorder.none),
-                            controller: order[pN]
-                                .productsOrdered[index]
-                                .amountController,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
+                                    /* 
+                                    ######### IMPORTANTISIMO ############ 
+                                    SIEMPRE PONER A NULL ANTES DE CREAR LA NUEVA LISTA FILTRADA, PORQUE SI NO LO PONEMOS A NULL Y ESTE VALOR SE QUEDA IGUAL, ENTONCES LA LISTA FILTRADA YA NO TENDRA ESE ELEMENTO GUARDADO Y DARÁ ERRORES. EN POCAS PALABRAS, EL VALOR GUARDADO NO ESTA EN LA NUEVA LISTA, DANDO ERROR.
+                                    */
+                                    listProductModelSelected[index] = null;
+
+                                    print(
+                                        'TIPO DE FILTRO: ${listOfFiltersPerElementOnAPlate[index].id}');
+
+                                    // Genera la lista filtrada
+                                    listOfFilteredlists[index] = products
+                                        .where((product) =>
+                                            product.type ==
+                                            listOfFiltersPerElementOnAPlate[
+                                                    index]
+                                                .id)
+                                        .toList();
+                                  });
+                                },
+                              ),
+                              Text(
+                                productTypeModelOption.name!,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ), // Sin SizedBox
                             ],
-                            onChanged: (value) {
-                              setState(() {
-                                order[pN].productsOrdered[index].setAmount(
-                                    int.tryParse(order[pN]
-                                            .productsOrdered[index]
-                                            .amountController
-                                            .text) ??
-                                        1);
-                              });
-                            },
                           ),
-                        ),
-
-                        // BOTON DE SUMAR
-                        IconButton(
-                          color: Colors.black,
-                          onPressed: () {
-                            setState(() {
-                              order[pN].productsOrdered[index].increment();
-                              print(order[pN]
-                                  .productsOrdered[index]
-                                  .amountController
-                                  .text);
-                            });
-                          },
-                          icon: const Icon(Icons.add),
-                        ),
-
-                        // INPUT DE SELECCION DEL PRODUCTO
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 5),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12)),
-                              child: DropdownButton<ProductModel>(
-                                  padding:
-                                      const EdgeInsetsDirectional.symmetric(
-                                          horizontal: 5),
-                                  isExpanded: true,
-                                  value: order[pN]
-                                      .productsOrdered[index]
-                                      .selectedProduct,
-                                  hint: const Text('Selecciona un producto'),
-                                  items: products.map((ProductModel product) {
-                                    return DropdownMenuItem<ProductModel>(
-                                      value: product,
-                                      child: Text(
-                                        product.name,
-                                      ),
-                                    );
-                                  }).toList(),
-                                  onChanged: (ProductModel? newProduct) {
-                                    setState(() {
-                                      order[pN]
-                                          .productsOrdered[index]
-                                          .selectedProduct = newProduct;
-                                      print(
-                                          '    <<Index>> $index\n    <<Cantidad>> ${order[pN].productsOrdered[index].amount}\n    <<Producto>> ${order[pN].productsOrdered[index].getSelectedProduct()}');
-
-                                      if (order[pN]
-                                              .productsOrdered[index]
-                                              .lastOne ==
-                                          true) {
-                                        if (order[pN]
-                                                .productsOrdered[index]
-                                                .amount ==
-                                            0) {
-                                          order[pN]
-                                              .productsOrdered[index]
-                                              .increment();
-                                        }
-                                        order[pN].addProduct(
-                                            ProductOrderModel(null));
-
-                                        order[pN]
-                                            .productsOrdered[index]
-                                            .lastOne = false;
-                                      }
-                                      /* print(
-                                          '    <<Index>> ${index + 1}\n    <<Cantidad>> ${order[pN].productsOrdered[index + 1].amount}\n    <<Producto>> ${order[pN].productsOrdered[index + 1].getSelectedProduct()}'); */
-                                    });
-                                  }),
-                            ),
-                          ),
-                        ),
-                      ],
+                        );
+                      }).toList(),
                     ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    if (order[pN].productsOrdered[index].selectedProduct !=
-                        null)
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // BOTON DE RESTAR
+                      IconButton(
+                        color: Colors.black,
+                        onPressed: () {
+                          setState(() {
+                            // El primer elemento nunca puede ser cero, siempre debe ser 1
+                            if (order[pN].productsOrdered[0].amount > 1 ||
+                                order[pN].productsOrdered.length > 1) {
+                              order[pN].productsOrdered[index].decrement();
+                            }
+                            print(order[pN]
+                                .productsOrdered[index]
+                                .amountController
+                                .text);
+
+                            //
+                            if (order[pN].productsOrdered[index].amount == 0 &&
+                                order[pN].productsOrdered.length > 1) {
+                              order[pN].deleteProduct(index);
+
+                              order[pN]
+                                  .productsOrdered[
+                                      order[pN].productsOrdered.length - 1]
+                                  .lastOne = true;
+                            }
+                          });
+                        },
+                        icon: const Icon(Icons.remove),
+                      ),
+
+                      // INPUT DE CANTIDAD DE PRODUCTO
                       Container(
-                        width: size.width * 0.98,
-                        height: size.height * 0.06,
+                        width: size.width * 0.12,
                         decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(12.0)),
+                            borderRadius: BorderRadius.circular(12)),
                         child: TextField(
-                          controller: order[pN]
-                              .productsOrdered[index]
-                              .commentController,
-                          keyboardType: TextInputType.visiblePassword,
-                          decoration: InputDecoration(
-                            hintText: 'Detalles producto ${index + 1}',
-                            labelStyle: const TextStyle(
-                              color: Color(0xFFBEBCBC),
-                              fontWeight: FontWeight.w700,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.all(12.0),
-                          ),
-                          onChanged: (value) {},
+                          textAlign: TextAlign.center,
+                          decoration:
+                              const InputDecoration(border: InputBorder.none),
+                          controller:
+                              order[pN].productsOrdered[index].amountController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              order[pN].productsOrdered[index].setAmount(
+                                  int.tryParse(order[pN]
+                                          .productsOrdered[index]
+                                          .amountController
+                                          .text) ??
+                                      1);
+                            });
+                          },
                         ),
                       ),
-                  ],
-                ),
+
+                      // BOTON DE SUMAR
+                      IconButton(
+                        color: Colors.black,
+                        onPressed: () {
+                          setState(() {
+                            order[pN].productsOrdered[index].increment();
+                            print(order[pN]
+                                .productsOrdered[index]
+                                .amountController
+                                .text);
+                          });
+                        },
+                        icon: const Icon(Icons.add),
+                      ),
+
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 5),
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12)),
+
+                            // INPUT DE SELECCION DEL PRODUCTO
+                            child: DropdownButton<ProductModel>(
+                                padding: const EdgeInsetsDirectional.symmetric(
+                                    horizontal: 5),
+                                isExpanded: true,
+                                value: listProductModelSelected[index],
+                                hint: const Text('Selecciona un producto'),
+                                items: listOfFilteredlists[index]
+                                    .map((ProductModel product) {
+                                  return DropdownMenuItem<ProductModel>(
+                                    value: product,
+                                    child: Text(
+                                      product.name,
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (ProductModel? newProduct) {
+                                  setState(() {
+                                    // Actualiza la selección en la lista
+                                    listProductModelSelected[index] =
+                                        newProduct;
+
+                                    // Le pasamos la clase del producto que agregara al plato
+                                    order[pN]
+                                        .productsOrdered[index]
+                                        .selectedProduct = newProduct;
+
+                                    print(
+                                        '    <<Index>> $index\n    <<Cantidad>> ${order[pN].productsOrdered[index].amount}\n    <<Producto>> ${order[pN].productsOrdered[index].getSelectedProduct()}');
+
+                                    if (order[pN]
+                                            .productsOrdered[index]
+                                            .lastOne ==
+                                        true) {
+                                      if (order[pN]
+                                              .productsOrdered[index]
+                                              .amount ==
+                                          0) {
+                                        order[pN]
+                                            .productsOrdered[index]
+                                            .increment();
+                                      }
+
+                                      // AGREAR NUEVO SELECCION DE PRODUCTO
+                                      listProductModelSelected.add(null);
+
+                                      // AGREGAR NUEVO FILTRO A LA LISTA DE FILTRO
+                                      listOfFiltersPerElementOnAPlate
+                                          .add(ProductTypeModel(null, null));
+
+                                      // AGREGAR NUEVA LISTA A LA LISTA DE LISTAS FILTRADAS
+                                      listOfFilteredlists.add([]);
+
+                                      // AGREGAR NUEVO PRODUCTO AL PLATO
+                                      order[pN]
+                                          .addProduct(ProductOrderModel(null));
+
+                                      order[pN].productsOrdered[index].lastOne =
+                                          false;
+                                    }
+                                    /* print(
+                                        '    <<Index>> ${index + 1}\n    <<Cantidad>> ${order[pN].productsOrdered[index + 1].amount}\n    <<Producto>> ${order[pN].productsOrdered[index + 1].getSelectedProduct()}'); */
+                                  });
+                                }),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  if (order[pN].productsOrdered[index].selectedProduct != null)
+                    Container(
+                      width: size.width * 0.98,
+                      height: size.height * 0.06,
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12.0)),
+                      child: TextField(
+                        controller:
+                            order[pN].productsOrdered[index].commentController,
+                        keyboardType: TextInputType.visiblePassword,
+                        decoration: InputDecoration(
+                          hintText: 'Detalles producto ${index + 1}',
+                          labelStyle: const TextStyle(
+                            color: Color(0xFFBEBCBC),
+                            fontWeight: FontWeight.w700,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.all(12.0),
+                        ),
+                        onChanged: (value) {},
+                      ),
+                    ),
+                ],
               ),
               // Cantidad de productos seleccionados en un plato
               itemCount: order[pN].productsOrdered.length,

@@ -2,11 +2,9 @@ import 'package:trt/models/models.dart';
 
 class PlateModel {
   final int plateNumber;
-  List<ProductOrderModel> productsOrdered = [
-    ProductOrderModel(null),
-  ];
+  List<ProductOrderModel> productsOrdered;
 
-  PlateModel(this.plateNumber);
+  PlateModel(this.plateNumber, this.productsOrdered);
 
   void addProduct(ProductOrderModel product) {
     productsOrdered.add(product);

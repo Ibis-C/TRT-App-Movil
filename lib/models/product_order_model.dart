@@ -7,7 +7,6 @@ class ProductOrderModel {
   final TextEditingController commentController = TextEditingController();
   int amount = 1;
   ProductModel? selectedProduct;
-  String? selectedFilter;
   String? comment;
   bool lastOne = true;
 
@@ -31,10 +30,6 @@ class ProductOrderModel {
 
   void setAmount(int amount) {
     this.amount = amount;
-  }
-
-  void setSelectedFilter(String selection) {
-    selectedFilter = selection;
   }
 
   String? getSelectedProduct() {
