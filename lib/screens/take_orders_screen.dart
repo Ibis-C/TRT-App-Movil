@@ -46,7 +46,6 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
     null,
   ];
 
-  //
   List<ProductTypeModel> listOfFiltersPerElementOnAPlate = [
     ProductTypeModel(null, null),
   ];
