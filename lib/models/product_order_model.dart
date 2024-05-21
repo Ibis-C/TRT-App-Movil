@@ -9,8 +9,10 @@ class ProductOrderModel {
   ProductModel? selectedProduct;
   String? comment;
   bool lastOne = true;
+  // CAMBIAR LA UBICACIÓN CUANDO SE ELIMINE UN PRODUCTO
+  int ubication;
 
-  ProductOrderModel(this.selectedProduct);
+  ProductOrderModel(this.selectedProduct, this.ubication);
 
   void increment() {
     amount++;
