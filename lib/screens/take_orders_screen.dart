@@ -42,27 +42,29 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
   ];
 
   // Seleccion de filtro en cada uno de los productos del plato
-  List<ProductModel?> listProductModelSelected = [
-    null,
+  List<List<ProductModel?>> listProductModelSelected = [
+    [null],
   ];
 
-  List<ProductTypeModel> listOfFiltersPerElementOnAPlate = [
-    ProductTypeModel(null, null),
+  List<List<ProductTypeModel>> listOfFiltersPerElementOnAPlate = [
+    [ProductTypeModel(null, null)],
   ];
 
-  List<List<ProductModel>> listOfFilteredlists = [
-    [],
+  // En el plato uno (lista intermedia), podemos tener listas (lista del fonfo) de filtros
+  List<List<List<ProductModel>>> listOfFilteredlists = [
+    [[]],
   ];
 
   List<PlateModel> order = [
     // Una orden tiene un plato, cada plato tiene un número y cada plato tiene una lista de productos y a cada producto se le pasa los datos del producto
-    PlateModel(0, [ProductOrderModel(null, 0)])
+    PlateModel(0, [ProductOrderModel(null)])
   ];
 
   // TIPO DE ORDEN
   OrderTypeModel? selectedOptionOrderType;
 
   final _customerNameController = TextEditingController();
+  final ScrollController scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -73,9 +75,22 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            order.add(PlateModel(order.length, [
-              ProductOrderModel(null, listProductModelSelected.length - 1)
-            ]));
+            // Priero agregar los datos para un nuevo plato
+            listProductModelSelected.add([null]);
+            listOfFiltersPerElementOnAPlate.add([ProductTypeModel(null, null)]);
+            listOfFilteredlists.add([[]]);
+
+            // Y despues agregar el plato. IMPORTA EL ORDEN DE EJECUCIÓN
+            order.add(PlateModel(order.length, [ProductOrderModel(null)]));
+
+            // Deslizar la pantalla al nuevo plato
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              scrollController.animateTo(
+                  scrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut);
+            });
+
             print('TAMAÑO DE LA LISTA ORDER = ${order.length}');
             for (var i = 0; i < order.length; i++) {
               print('PLATO[$i] = ${order[i].plateNumber}');
@@ -171,6 +186,7 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
             ),
             Expanded(
               child: ListView.builder(
+                controller: scrollController,
                 itemBuilder: (context, index) {
                   return selectMenuItem(index, size);
                 },
@@ -236,41 +252,40 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                             activeColor: Colors.white,
                             value: productTypeModelOption,
                             groupValue:
-                                // hago referencia al siguiente elemento de la lista
-                                listOfFiltersPerElementOnAPlate[
+                                listOfFiltersPerElementOnAPlate[plateNumber]
+                                    [index],
+                            // hago referencia al siguiente elemento de la lista
+                            /* listOfFiltersPerElementOnAPlate[
                                     order[plateNumber]
                                         .productsOrdered[index]
-                                        .ubication],
+                                        .ubication] */
                             onChanged: (ProductTypeModel? value) {
                               setState(() {
                                 // Asignar el filtro a la lista en la posición que le corresponde
-                                listOfFiltersPerElementOnAPlate[
+                                listOfFiltersPerElementOnAPlate[plateNumber]
+                                    [index] = value!;
+                                /* listOfFiltersPerElementOnAPlate[
                                     order[plateNumber]
                                         .productsOrdered[index]
-                                        .ubication] = value!;
+                                        .ubication] = value!; */
 
                                 /* 
                                 ######### IMPORTANTISIMO ############ 
                                 SIEMPRE PONER A NULL ANTES DE CREAR LA NUEVA LISTA FILTRADA, PORQUE SI NO LO PONEMOS A NULL Y ESTE VALOR SE QUEDA IGUAL, ENTONCES LA LISTA FILTRADA YA NO TENDRA ESE ELEMENTO GUARDADO Y DARÁ ERRORES. EN POCAS PALABRAS, EL VALOR GUARDADO NO ESTA EN LA NUEVA LISTA, DANDO ERROR.
                                 */
-                                listProductModelSelected[order[plateNumber]
-                                    .productsOrdered[index]
-                                    .ubication] = null;
+                                listProductModelSelected[plateNumber][index] =
+                                    null;
 
                                 print(
-                                    'TIPO DE FILTRO: ${listOfFiltersPerElementOnAPlate[order[plateNumber].productsOrdered[index].ubication].id}');
+                                    'TIPO DE FILTRO: ${listOfFiltersPerElementOnAPlate[plateNumber][index].id}');
 
                                 // Genera la lista filtrada
-                                listOfFilteredlists[order[plateNumber]
-                                        .productsOrdered[index]
-                                        .ubication] =
+                                listOfFilteredlists[plateNumber][index] =
                                     products
                                         .where((product) =>
                                             product.type ==
                                             listOfFiltersPerElementOnAPlate[
-                                                    order[plateNumber]
-                                                        .productsOrdered[index]
-                                                        .ubication]
+                                                    plateNumber][index]
                                                 .id)
                                         .toList();
                               });
@@ -299,25 +314,18 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                             order[plateNumber].productsOrdered.length > 1) {
                           order[plateNumber].productsOrdered[index].decrement();
                         }
-                        print(order[plateNumber]
-                            .productsOrdered[index]
-                            .amountController
-                            .text);
 
-                        //
                         if (order[plateNumber].productsOrdered[index].amount ==
                                 0 &&
                             order[plateNumber].productsOrdered.length > 1) {
-                          listProductModelSelected.removeAt(order[plateNumber]
-                              .productsOrdered[index]
-                              .ubication);
-                          listOfFiltersPerElementOnAPlate.removeAt(
-                              order[plateNumber]
-                                  .productsOrdered[index]
-                                  .ubication);
-                          listOfFilteredlists.removeAt(order[plateNumber]
-                              .productsOrdered[index]
-                              .ubication);
+                          /*
+                          ############### CUIDADO ################
+                          Ve de que forma estas eliminando tus elementos
+                          */
+                          listProductModelSelected[plateNumber].removeAt(index);
+                          listOfFiltersPerElementOnAPlate[plateNumber]
+                              .removeAt(index);
+                          listOfFilteredlists[plateNumber].removeAt(index);
 
                           /*
                           ############### IMPORTANTISIMO ###############
@@ -331,7 +339,7 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                               .lastOne = true;
 
                           // REASIGNAR LAS UBICACIONES DE TODOS LOS VALORES
-                          int counter = 0;
+                          /* int counter = 0;
                           for (var i = 0; i < order.length; i++) {
                             for (var j = 0;
                                 j < order[i].productsOrdered.length;
@@ -339,7 +347,7 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                               order[i].productsOrdered[j].ubication = counter;
                               counter++;
                             }
-                          }
+                          } */
                         }
                       });
                     },
@@ -402,13 +410,9 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                             padding: const EdgeInsetsDirectional.symmetric(
                                 horizontal: 5),
                             isExpanded: true,
-                            value: listProductModelSelected[order[plateNumber]
-                                .productsOrdered[index]
-                                .ubication],
+                            value: listProductModelSelected[plateNumber][index],
                             hint: const Text('Selecciona un producto'),
-                            items: listOfFilteredlists[order[plateNumber]
-                                    .productsOrdered[index]
-                                    .ubication]
+                            items: listOfFilteredlists[plateNumber][index]
                                 .map((ProductModel product) {
                               return DropdownMenuItem<ProductModel>(
                                 value: product,
@@ -420,9 +424,8 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                             onChanged: (ProductModel? newProduct) {
                               setState(() {
                                 // Actualiza la selección en la lista
-                                listProductModelSelected[order[plateNumber]
-                                    .productsOrdered[index]
-                                    .ubication] = newProduct;
+                                listProductModelSelected[plateNumber][index] =
+                                    newProduct;
 
                                 // Le pasamos la clase del producto que agregara al plato
                                 order[plateNumber]
@@ -446,19 +449,21 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                                   }
 
                                   // AGREAR NUEVO SELECCION DE PRODUCTO
-                                  listProductModelSelected.add(null);
+                                  listProductModelSelected[plateNumber]
+                                      .add(null);
 
                                   // AGREGAR NUEVO FILTRO A LA LISTA DE FILTRO
-                                  listOfFiltersPerElementOnAPlate
+                                  listOfFiltersPerElementOnAPlate[plateNumber]
                                       .add(ProductTypeModel(null, null));
 
                                   // AGREGAR NUEVA LISTA A LA LISTA DE LISTAS FILTRADAS
-                                  listOfFilteredlists.add([]);
+                                  listOfFilteredlists[plateNumber].add([]);
 
                                   // AGREGAR NUEVO PRODUCTO AL PLATO
-                                  order[plateNumber].addProduct(
-                                      ProductOrderModel(null,
-                                          listProductModelSelected.length - 1));
+                                  order[plateNumber]
+                                      .addProduct(ProductOrderModel(
+                                    null,
+                                  ));
 
                                   order[plateNumber]
                                       .productsOrdered[index]
