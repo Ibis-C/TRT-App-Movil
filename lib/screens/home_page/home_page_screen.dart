@@ -249,7 +249,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       stream: FirebaseFirestore.instance
           .collection('orders')
           .where('estado', isEqualTo: estado)
-          .orderBy('register', descending: true)
+          .orderBy('register', descending: false)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
