@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:trt/models/models.dart';
@@ -11,25 +12,25 @@ class TakeOrdersScreen extends StatefulWidget {
 
 class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
   List<OrderTypeModel> orderTypeOptions = [
-    OrderTypeModel('esperando', 'Esperando'),
+    /* OrderTypeModel('esperando', 'Esperando'),
     OrderTypeModel('mesa1', 'Mesa 1'),
     OrderTypeModel('domicilio', 'A domicilio'),
     OrderTypeModel('mesa2', 'Mesa 2'),
     OrderTypeModel('recoger', 'Recoger'),
-    OrderTypeModel('mesa3', 'Mesa 3'),
+    OrderTypeModel('mesa3', 'Mesa 3'), */
   ];
 
   List<ProductTypeModel> filters = [
-    ProductTypeModel('maiz', 'M'),
+    /* ProductTypeModel('maiz', 'M'),
     ProductTypeModel('harina', 'H'),
     ProductTypeModel('telera', 'T'),
     ProductTypeModel('nachos', 'N'),
     ProductTypeModel('bebida', 'B'),
-    ProductTypeModel('kilo', 'K'),
+    ProductTypeModel('kilo', 'K'), */
   ];
 
   List<ProductModel> products = [
-    ProductModel('Taco de maíz', 16, 'maiz'),
+    /* ProductModel('Taco de maíz', 16, 'maiz'),
     ProductModel('Taco de maíz C/Q', 19, 'maiz'),
     ProductModel('Taco de harina', 20, 'harina'),
     ProductModel('Sincronizada', 35, 'harina'),
@@ -38,7 +39,7 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
     ProductModel('Nachos pequeños', 80, 'nachos'),
     ProductModel('Nachos grandes', 120, 'nachos'),
     ProductModel('Agua de jamaica', 18, 'bebida'),
-    ProductModel('Coca cola', 20, 'bebida')
+    ProductModel('Coca cola', 20, 'bebida') */
   ];
 
   // Seleccion de filtro en cada uno de los productos del plato
@@ -63,8 +64,78 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
   // TIPO DE ORDEN
   OrderTypeModel? selectedOptionOrderType;
 
+  // DATOS A GUARDAR EN LA BASE DE DATOS
+  OrderModel? orderToSave;
+
   final _customerNameController = TextEditingController();
   final ScrollController scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFirestoreData();
+  }
+
+  Future<void> _fetchFirestoreData() async {
+    try {
+      // Fetch order type options
+      QuerySnapshot orderTypeSnapshot =
+          await FirebaseFirestore.instance.collection('order_type').get();
+      // Usando el modelo local
+      List<OrderTypeModel> orderTypeList = orderTypeSnapshot.docs.map((doc) {
+        return OrderTypeModel.firestore(doc.id, doc['id'], doc['name']);
+      }).toList();
+
+      // Fetch products
+      QuerySnapshot productsSnapshot =
+          await FirebaseFirestore.instance.collection('productos').get();
+      List<ProductModel> productList = productsSnapshot.docs.map((doc) {
+        return ProductModel.firestore(
+            doc.id, doc['nombre'], doc['precio'], doc['tipo']);
+      }).toList();
+
+      // Fetch filter
+      QuerySnapshot filtersSnapshot =
+          await FirebaseFirestore.instance.collection('filters').get();
+      List<ProductTypeModel> filtersList = filtersSnapshot.docs.map((doc) {
+        return ProductTypeModel.firestore(doc.id, doc['id'], doc['name']);
+      }).toList();
+
+      // Update state with fetched data
+      setState(() {
+        orderTypeOptions = orderTypeList;
+        filters = filtersList;
+        products = productList;
+      });
+    } catch (e) {
+      print('ERROR FETCHING DATA FROM FIRESTORE: $e');
+    }
+  }
+
+  Future<void> saveOrderToFirestore(OrderModel order) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    CollectionReference orders = firestore.collection('orders');
+
+    try {
+      await orders.add(order.toMap());
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Center(child: Text("Orden guarda")),
+        ),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Center(child: Text("ERROR AL INTENTAR GUARDAR LA ORDEN. $e")),
+        ),
+      );
+
+      Navigator.pop(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +176,10 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFFB3E03),
         leading: IconButton(
-            onPressed: () {}, icon: const Icon(Icons.arrow_back_rounded)),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.arrow_back_rounded)),
         title: const Center(
           child: Text(
             'ORDENAR',
@@ -115,8 +189,22 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
           ),
         ),
         actions: <Widget>[
+          // GUARDAR ORDEN
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              if (_customerNameController.text == '' &&
+                  selectedOptionOrderType == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Center(child: Text("Rellena todos los campos")),
+                  ),
+                );
+              } else {
+                orderToSave = OrderModel(_customerNameController.text,
+                    selectedOptionOrderType!, order);
+                saveOrderToFirestore(orderToSave!);
+              }
+            },
             icon: const Icon(Icons.save_rounded),
             color: Colors.black,
           )

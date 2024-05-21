@@ -12,6 +12,8 @@ class ProductOrderModel {
 
   ProductOrderModel(this.selectedProduct);
 
+  ProductOrderModel.all(this.amount, this.selectedProduct, this.comment);
+
   void increment() {
     amount++;
     amountController.text = amount.toString();
@@ -37,5 +39,25 @@ class ProductOrderModel {
       return 'No ha seleccionado un producto';
     }
     return selectedProduct?.name;
+  }
+
+  factory ProductOrderModel.fromMap(Map<String, dynamic> data) {
+    if (data['selectedProduct'] != null) {
+      return ProductOrderModel.all(
+        data['amount'],
+        ProductModel.fromMap(data['selectedProduct']),
+        data['comment'],
+      );
+    } else {
+      return ProductOrderModel.all(0, null, '');
+    }
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'amount': amount,
+      'selectedProduct': selectedProduct?.toMap(),
+      'comment': comment,
+    };
   }
 }

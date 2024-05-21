@@ -13,4 +13,21 @@ class PlateModel {
   void deleteProduct(int index) {
     productsOrdered.removeAt(index);
   }
+
+  factory PlateModel.fromMap(Map<String, dynamic> data) {
+    return PlateModel(
+      data['plateNumber'],
+      (data['productsOrdered'] as List)
+          .map((product) => ProductOrderModel.fromMap(product))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'plateNumber': plateNumber,
+      'productsOrdered':
+          productsOrdered.map((product) => product.toMap()).toList(),
+    };
+  }
 }

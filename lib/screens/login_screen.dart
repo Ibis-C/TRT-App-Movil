@@ -164,8 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 content: Center(child: Text("Bienvenido")),
                               ),
                             );
-                            Navigator.pushReplacementNamed(
-                                context, 'takeOrders');
+                            Navigator.pushReplacementNamed(context, 'homePage');
                           } else {
                             setState(() {
                               _errorMessage =
