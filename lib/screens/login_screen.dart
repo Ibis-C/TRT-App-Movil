@@ -12,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController =
       TextEditingController(text: 'tresreyestacos@gmail.com');
-  final _passwordController = TextEditingController(text: '*pa.tu.chesco!');
+  final _passwordController = TextEditingController();
   final AuthenticationService _auth = AuthenticationService();
   String? _errorMessage;
   bool _isButtonDisabled = false;
