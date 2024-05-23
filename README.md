@@ -48,7 +48,7 @@ Este diseño ilustra la interacción entre el cliente y la base de datos, y el c
 
 ## Vistas del proyecto
 
-<div style="width: 1rem; display: flex; flex-direction: row;">
+<div style="display: flex; flex-direction: row;">
   <img src="/public/login.png" alt="login" style="margin: 0 10px;">
   <img src="/public/principal.png" alt="pantalla principal" style="margin: 0 10px;">
   <img src="/public/ordenar.png" alt="pantalla para tomar pedidos" style="margin: 0 10px;">
