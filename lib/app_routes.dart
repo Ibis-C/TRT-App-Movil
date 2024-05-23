@@ -13,13 +13,17 @@ class AppRoutes {
       screen: const LoginScreen(),
     ),
     MenuOptionModel(
-      route: 'firebase',
+      route: 'homePage',
       screen: const HomePageScreen(),
     ),
     MenuOptionModel(
       route: 'addName',
       screen: const AddNameScreen(),
-    )
+    ),
+    MenuOptionModel(
+      route: 'takeOrders',
+      screen: const TakeOrdersScreen(),
+    ),
   ];
 
   static Map<String, Widget Function(BuildContext)> getAppRoutes() {
@@ -33,7 +37,6 @@ class AppRoutes {
   }
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    // return MaterialPageRoute(builder: (context) => const Login());
     return MaterialPageRoute(builder: (context) => const LoginScreen());
   }
 }
