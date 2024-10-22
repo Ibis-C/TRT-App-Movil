@@ -1,5 +1,4 @@
 # Tres Reyes Tacos App Móvil
-
 App móvil para gestionar pedidos. Inicio de sesión con Google, ver y administrar listas de pedidos pendientes y completados, marcar pedidos como terminados, tomar nuevos pedidos y recibir actualizaciones. Todo en tiempo real.
 
 Tecnologías utilizadas:
@@ -9,12 +8,9 @@ Tecnologías utilizadas:
 Integrantes:
 - Carrillo Araujo Ibis
 - Martin Ake Edwin Apolonio
+- Darwin Miguel Huchim Dzib
+- Ricardo Alejandro Ayala Canche
 
-Asesor:
-- Dr. José Luis López Martínez
-
-Fecha de entrega:
-- 21 de mayo del 2024
 
 ## Introducción
 
@@ -33,36 +29,3 @@ Este diseño ilustra la interacción entre el actor y los casos de uso, resaltan
 <div style="width: 55rem">
     <img src="public/diagrama-casos-de-uso.png" alt="Diagrama de casos de uso">
 </div>
-
-
-## Arquitectura utilizada
-
-**Cliente - Servidor**
-
-**Diagrama de despliegue**
-Este diseño ilustra la interacción entre el cliente y la base de datos, y el cliente y el servidor de autenticación.
-<div style="width: 55rem">
-    <img src="/public/diagrama-despliegue.png" alt="Diagrama de casos de uso">
-</div>
-
-
-## Vistas del proyecto
-
-<div style="display: flex; flex-direction: row;">
-  <img src="/public/login.png" alt="login" style="margin: 0 10px;">
-  <img src="/public/principal.png" alt="pantalla principal" style="margin: 0 10px;">
-  <img src="/public/ordenar.png" alt="pantalla para tomar pedidos" style="margin: 0 10px;">
-</div>
-
-
-## Demostración
-
-[Demo](https://alumnosuady-my.sharepoint.com/:v:/g/personal/a20216875_alumnos_uady_mx/EfIOTgPXl6ZJhq1YXGLCgGYBBSoMZlZJ_E6-VCusfLDL7Q?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=GpIaBQ)
-
-
-## Conclusiones
-La implementación de esta solución tecnológica ha demostrado ser un catalizador significativo para la eficiencia operativa y la mejora del servicio al cliente. La aplicación ha permitido a los empleados gestionar pedidos de manera más rápida y precisa, reduciendo drásticamente los errores y los tiempos de espera.
-
-
-## Planes a futuros
-Agregar nuevas funcionalidades y seguir creciendo la aplicación.
