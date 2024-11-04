@@ -7,26 +7,23 @@ class OrderModel {
   final List<PlateModel> plates;
   Timestamp register = Timestamp.now();
   String estado = 'pendiente';
+  String? id;
 
   OrderModel(this.customerName, this.orderType, this.plates);
   OrderModel.firebase(this.customerName, this.orderType, this.plates,
-      this.register, this.estado);
-
-  void changeEstado() {
-    (estado == 'pendiente') ? estado = 'listo' : estado = 'pendiente';
-  }
+      this.register, this.estado, this.id);
 
   factory OrderModel.fromSnapshot(DocumentSnapshot snapshot) {
     Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
     return OrderModel.firebase(
-      data['customerName'],
-      OrderTypeModel.fromMap(data['orderType']),
-      (data['plates'] as List)
-          .map((plate) => PlateModel.fromMap(plate))
-          .toList(),
-      data['register'],
-      data['estado'],
-    );
+        data['customerName'],
+        OrderTypeModel.fromMap(data['orderType']),
+        (data['plates'] as List)
+            .map((plate) => PlateModel.fromMap(plate))
+            .toList(),
+        data['register'],
+        data['estado'],
+        data['id']);
   }
 
   Map<String, dynamic> toMap() {
@@ -36,6 +33,7 @@ class OrderModel {
       'plates': plates.map((plate) => plate.toMap()).toList(),
       'register': register,
       'estado': estado,
+      'id': id
     };
   }
 }
