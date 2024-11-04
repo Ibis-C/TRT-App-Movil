@@ -112,13 +112,14 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
     }
   }
 
-  Future<void> saveOrderToFirestore(OrderModel order) async {
+  Future<void> saveOrderToFirestore(
+      OrderModel order, ScaffoldMessengerState messenger) async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     CollectionReference orders = firestore.collection('orders');
-
+    messenger.hideCurrentSnackBar();
     try {
       await orders.add(order.toMap());
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(
           content: Center(child: Text("Orden guarda")),
         ),
@@ -126,7 +127,7 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
 
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content:
               Center(child: Text("ERROR AL INTENTAR GUARDAR LA ORDEN. $e")),
@@ -141,30 +142,47 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final containerTextFieldWidth = size.width * 0.9;
+    final messenger = ScaffoldMessenger.of(context);
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            // Primero agregar los datos para un nuevo plato
-            listProductModelSelected.add([null]);
-            listOfFiltersPerElementOnAPlate.add([ProductTypeModel(null, null)]);
-            listOfFilteredlists.add([[]]);
+            int lastPlate = order.length;
+            if (order[lastPlate - 1].productsOrdered[0].selectedProduct ==
+                null) {
+              messenger.hideCurrentSnackBar();
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Center(
+                    child: Text(
+                      "Agrega al menos un producto al plato $lastPlate",
+                    ),
+                  ),
+                ),
+              );
+            } else {
+              // Primero agregar los datos para un nuevo plato
+              listProductModelSelected.add([null]);
+              listOfFiltersPerElementOnAPlate
+                  .add([ProductTypeModel(null, null)]);
+              listOfFilteredlists.add([[]]);
 
-            // Y despues agregar el plato. IMPORTA EL ORDEN DE EJECUCIÓN
-            order.add(PlateModel(order.length, [ProductOrderModel(null)]));
+              // Y despues agregar el plato. IMPORTA EL ORDEN DE EJECUCIÓN
+              order.add(PlateModel(order.length, [ProductOrderModel(null)]));
 
-            // Deslizar la pantalla al nuevo plato
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              scrollController.animateTo(
-                  scrollController.position.maxScrollExtent,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut);
-            });
+              // Deslizar la pantalla al nuevo plato
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                scrollController.animateTo(
+                    scrollController.position.maxScrollExtent,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut);
+              });
 
-            print('TAMAÑO DE LA LISTA ORDER = ${order.length}');
-            for (var i = 0; i < order.length; i++) {
-              print('PLATO[$i] = ${order[i].plateNumber}');
+              print('TAMAÑO DE LA LISTA ORDER = ${order.length}');
+              for (var i = 0; i < order.length; i++) {
+                print('PLATO[$i] = ${order[i].plateNumber}');
+              }
             }
           });
         },
@@ -192,17 +210,21 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
           // GUARDAR ORDEN
           IconButton(
             onPressed: () {
-              if (_customerNameController.text == '' &&
-                  selectedOptionOrderType == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
+              // Si el producto 1 del plato 1 de la orden es null, entonces no se ha seleccionado ningun producto en la orden.
+              if (_customerNameController.text == '' ||
+                  selectedOptionOrderType == null ||
+                  order[0].productsOrdered[0].selectedProduct == null) {
+                messenger.hideCurrentSnackBar();
+                messenger.showSnackBar(
                   const SnackBar(
                     content: Center(child: Text("Rellena todos los campos")),
+                    duration: Duration(seconds: 2),
                   ),
                 );
               } else {
                 orderToSave = OrderModel(_customerNameController.text,
                     selectedOptionOrderType!, order);
-                saveOrderToFirestore(orderToSave!);
+                saveOrderToFirestore(orderToSave!, messenger);
               }
             },
             icon: const Icon(Icons.save_rounded),
@@ -342,7 +364,7 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                             groupValue:
                                 listOfFiltersPerElementOnAPlate[plateNumber]
                                     [index],
-                            // hago referencia al siguiente elemento de la lista
+                            // hago referencia al siguiente elemento de la listaplateNumber
                             /* listOfFiltersPerElementOnAPlate[
                                     order[plateNumber]
                                         .productsOrdered[index]
@@ -397,37 +419,53 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                     color: Colors.black,
                     onPressed: () {
                       setState(() {
-                        // El primer elemento nunca puede ser cero, siempre debe ser 1
-                        if (order[plateNumber].productsOrdered[0].amount > 1 ||
-                            order[plateNumber].productsOrdered.length > 1) {
-                          order[plateNumber].productsOrdered[index].decrement();
-                        }
+                        // Si hay más de 1 plato y si el plato solo tiene un producto y si ese producto si se le quitará 1 quedaría en cero, entonces se quita el plato porque no tiene ningun producto.
+                        if (plateNumber > 0 &&
+                            order[plateNumber].productsOrdered.length == 1 &&
+                            (order[plateNumber].productsOrdered[0].amount -
+                                    1) ==
+                                0) {
+                          order.removeAt(plateNumber);
+                        } else {
+                          // El primer elemento nunca puede ser cero, siempre debe ser 1
+                          if (order[plateNumber].productsOrdered[0].amount >
+                                  1 ||
+                              order[plateNumber].productsOrdered.length > 1) {
+                            order[plateNumber]
+                                .productsOrdered[index]
+                                .decrement();
+                          }
 
-                        if (order[plateNumber].productsOrdered[index].amount ==
-                                0 &&
-                            order[plateNumber].productsOrdered.length > 1) {
-                          /*
+                          if (order[plateNumber]
+                                      .productsOrdered[index]
+                                      .amount ==
+                                  0 &&
+                              order[plateNumber].productsOrdered.length > 1) {
+                            /*
+
                           ############### CUIDADO ################
                           Ve de que forma estas eliminando tus elementos
                           */
-                          listProductModelSelected[plateNumber].removeAt(index);
-                          listOfFiltersPerElementOnAPlate[plateNumber]
-                              .removeAt(index);
-                          listOfFilteredlists[plateNumber].removeAt(index);
+                            listProductModelSelected[plateNumber]
+                                .removeAt(index);
+                            listOfFiltersPerElementOnAPlate[plateNumber]
+                                .removeAt(index);
+                            listOfFilteredlists[plateNumber].removeAt(index);
 
-                          /*
+                            /*
                           ############### IMPORTANTISIMO ###############
                           DEJAR ESTO AQUÍ, PORQUE PRIMERO DEBEMOS ELIMINAR LOS VALORES DE LAS LISTAS DE AQUÍ, ANTES DE ELIMINAR LOS PRODUCTOS DEL PLATO. YA QUE, AL ELIMINAR EL PRODUCTO TAMBIEN REDUCE EL VALOR DEL INDEX 
                           */
-                          order[plateNumber].deleteProduct(index);
+                            order[plateNumber].deleteProduct(index);
 
-                          order[plateNumber]
-                              .productsOrdered[
-                                  order[plateNumber].productsOrdered.length - 1]
-                              .lastOne = true;
+                            order[plateNumber]
+                                .productsOrdered[
+                                    order[plateNumber].productsOrdered.length -
+                                        1]
+                                .lastOne = true;
 
-                          // REASIGNAR LAS UBICACIONES DE TODOS LOS VALORES
-                          /* int counter = 0;
+                            // REASIGNAR LAS UBICACIONES DE TODOS LOS VALORES
+                            /* int counter = 0;
                           for (var i = 0; i < order.length; i++) {
                             for (var j = 0;
                                 j < order[i].productsOrdered.length;
@@ -436,6 +474,7 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                               counter++;
                             }
                           } */
+                          }
                         }
                       });
                     },
