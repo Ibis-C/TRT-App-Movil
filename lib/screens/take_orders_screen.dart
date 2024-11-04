@@ -146,7 +146,7 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            // Priero agregar los datos para un nuevo plato
+            // Primero agregar los datos para un nuevo plato
             listProductModelSelected.add([null]);
             listOfFiltersPerElementOnAPlate.add([ProductTypeModel(null, null)]);
             listOfFilteredlists.add([[]]);
@@ -569,6 +569,7 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
               ),
               if (order[plateNumber].productsOrdered[index].selectedProduct !=
                   null)
+                // INPUT DEL DETALLES DEL PRODUCTO
                 Container(
                   width: size.width * 0.98,
                   height: size.height * 0.06,
@@ -576,6 +577,7 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12.0)),
                   child: TextField(
+                    // Guardando los detalles del producto
                     controller: order[plateNumber]
                         .productsOrdered[index]
                         .commentController,
@@ -589,7 +591,13 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.all(12.0),
                     ),
-                    onChanged: (value) {},
+                    onChanged: (value) {
+                      order[plateNumber].productsOrdered[index].comment =
+                          order[plateNumber]
+                              .productsOrdered[index]
+                              .commentController
+                              .text;
+                    },
                   ),
                 ),
             ],
