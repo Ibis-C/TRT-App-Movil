@@ -51,12 +51,13 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   style: TextStyle(fontSize: textSize),
                 ),
                 Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: order.plates
                       .map((plate) => Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Plato ${plate.plateNumber}',
+                                'Plato ${plate.plateNumber + 1}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: textSize,
@@ -70,24 +71,13 @@ class _HomePageScreenState extends State<HomePageScreen> {
                                       (product.amount *
                                           (product.selectedProduct?.price ??
                                               0));
-                                  return Column(
-                                    children: [
-                                      if (product.comment == '' ||
-                                          product.comment == null)
-                                        Text(
-                                          '    + ${product.amount} ${product.selectedProduct?.name}',
-                                          style: TextStyle(
-                                            fontSize: textSize,
-                                          ),
-                                        )
-                                      else
-                                        Text(
-                                          '    + ${product.amount} ${product.selectedProduct?.name} [ ${product.comment} ]',
-                                          style: TextStyle(
-                                            fontSize: textSize,
-                                          ),
-                                        )
-                                    ],
+                                  return Text(
+                                    product.comment == null
+                                        ? '    + ${product.amount} ${product.selectedProduct?.name}'
+                                        : '    + ${product.amount} ${product.selectedProduct?.name} [ ${product.comment} ]',
+                                    style: TextStyle(
+                                      fontSize: textSize,
+                                    ),
                                   );
                                 }).toList(),
                               )
@@ -98,8 +88,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
                 const SizedBox(height: 20),
                 Center(
                   child: Text(
-                    '\$$totalPrice',
+                    'Total: \$$totalPrice',
                     style: TextStyle(
+                      fontWeight: FontWeight.w800,
                       fontSize: textSize,
                     ),
                   ),
