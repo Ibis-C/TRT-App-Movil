@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:trt/models/models.dart';
+import 'package:trt/services/firebase_service.dart';
 
 class HomePageScreen extends StatefulWidget {
   const HomePageScreen({super.key});
@@ -12,8 +13,7 @@ class HomePageScreen extends StatefulWidget {
 class _HomePageScreenState extends State<HomePageScreen> {
   Widget orderCard(OrderModel order) {
     double textSize = 20;
-    int totalPrice;
-    (order.orderType.id == 'domicilio') ? totalPrice = 15 : totalPrice = 0;
+    int totalPrice = order.orderType.id == 'domicilio' ? 20 : 0;
     return SizedBox(
       width: double.infinity,
       child: Dismissible(
@@ -23,7 +23,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
             : DismissDirection.endToStart,
         onDismissed: (direction) {
           setState(() {
-            order.changeEstado();
+            // Actualizar el estado de la orden en Firestore
+            order.estado == 'pendiente'
+                ? changeOrderStatus(order.id!, 'listo')
+                : changeOrderStatus(order.id!, 'pendiente');
           });
         },
         background: Container(
@@ -121,14 +124,14 @@ class _HomePageScreenState extends State<HomePageScreen> {
         final orders = snapshot.data?.docs.map((doc) {
               final data = doc.data() as Map<String, dynamic>;
               return OrderModel.firebase(
-                data['customerName'],
-                OrderTypeModel.fromMap(data['orderType']),
-                (data['plates'] as List)
-                    .map((plate) => PlateModel.fromMap(plate))
-                    .toList(),
-                data['register'],
-                data['estado'],
-              );
+                  data['customerName'],
+                  OrderTypeModel.fromMap(data['orderType']),
+                  (data['plates'] as List)
+                      .map((plate) => PlateModel.fromMap(plate))
+                      .toList(),
+                  data['register'],
+                  data['estado'],
+                  doc.id);
             }).toList() ??
             [];
         return SingleChildScrollView(
