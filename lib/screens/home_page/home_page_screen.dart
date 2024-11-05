@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:trt/models/models.dart';
+import 'package:trt/services/firebase_service.dart';
 
 class HomePageScreen extends StatefulWidget {
   const HomePageScreen({super.key});
@@ -10,142 +11,9 @@ class HomePageScreen extends StatefulWidget {
 }
 
 class _HomePageScreenState extends State<HomePageScreen> {
-  List<OrderModel> pedidos = [
-    OrderModel(
-      'Edwin',
-      OrderTypeModel('domicilio', 'A domicilio'),
-      <PlateModel>[
-        PlateModel(
-          1,
-          <ProductOrderModel>[
-            ProductOrderModel.all(
-              2,
-              ProductModel('Torta sencilla', 35, 'telera'),
-              '1 sin salsa roja',
-            ),
-            ProductOrderModel.all(
-              3,
-              ProductModel('Taco de maíz', 16, 'maiz'),
-              '',
-            )
-          ],
-        ),
-      ],
-    ),
-    OrderModel(
-      'Ibis',
-      OrderTypeModel('mesa1', 'Mesa 1'),
-      <PlateModel>[
-        PlateModel(
-          1,
-          <ProductOrderModel>[
-            ProductOrderModel.all(
-              1,
-              ProductModel('Sincronizada', 35, 'harina'),
-              'S/C',
-            ),
-            ProductOrderModel.all(
-              1,
-              ProductModel('Agua de jamaica', 18, 'bebida'),
-              '',
-            ),
-          ],
-        ),
-        PlateModel(
-          2,
-          <ProductOrderModel>[
-            ProductOrderModel.all(
-              1,
-              ProductModel('Nachos grandes', 120, 'nachos'),
-              'A/E',
-            ),
-            ProductOrderModel.all(
-              1,
-              ProductModel('Coca cola', 20, 'bebida'),
-              '',
-            ),
-          ],
-        )
-      ],
-    ),
-    OrderModel(
-      'Jose',
-      OrderTypeModel('mesa1', 'Mesa 1'),
-      <PlateModel>[
-        PlateModel(
-          1,
-          <ProductOrderModel>[
-            ProductOrderModel.all(
-              1,
-              ProductModel('Sincronizada', 35, 'harina'),
-              'S/C',
-            ),
-            ProductOrderModel.all(
-              1,
-              ProductModel('Agua de jamaica', 18, 'bebida'),
-              '',
-            ),
-          ],
-        ),
-        PlateModel(
-          2,
-          <ProductOrderModel>[
-            ProductOrderModel.all(
-              1,
-              ProductModel('Nachos grandes', 120, 'nachos'),
-              'A/E',
-            ),
-            ProductOrderModel.all(
-              1,
-              ProductModel('Coca cola', 20, 'bebida'),
-              '',
-            ),
-          ],
-        )
-      ],
-    ),
-    OrderModel(
-      'Mike',
-      OrderTypeModel('mesa1', 'Mesa 1'),
-      <PlateModel>[
-        PlateModel(
-          1,
-          <ProductOrderModel>[
-            ProductOrderModel.all(
-              1,
-              ProductModel('Sincronizada', 35, 'harina'),
-              'S/C',
-            ),
-            ProductOrderModel.all(
-              1,
-              ProductModel('Agua de jamaica', 18, 'bebida'),
-              '',
-            ),
-          ],
-        ),
-        PlateModel(
-          2,
-          <ProductOrderModel>[
-            ProductOrderModel.all(
-              1,
-              ProductModel('Nachos grandes', 120, 'nachos'),
-              'A/E',
-            ),
-            ProductOrderModel.all(
-              1,
-              ProductModel('Coca cola', 20, 'bebida'),
-              '',
-            ),
-          ],
-        )
-      ],
-    )
-  ];
-
   Widget orderCard(OrderModel order) {
     double textSize = 20;
-    int totalPrice;
-    (order.orderType.id == 'domicilio') ? totalPrice = 15 : totalPrice = 0;
+    int totalPrice = order.orderType.id == 'domicilio' ? 20 : 0;
     return SizedBox(
       width: double.infinity,
       child: Dismissible(
@@ -155,7 +23,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
             : DismissDirection.endToStart,
         onDismissed: (direction) {
           setState(() {
-            order.changeEstado();
+            // Actualizar el estado de la orden en Firestore
+            order.estado == 'pendiente'
+                ? changeOrderStatus(order.id!, 'listo')
+                : changeOrderStatus(order.id!, 'pendiente');
           });
         },
         background: Container(
@@ -183,12 +54,13 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   style: TextStyle(fontSize: textSize),
                 ),
                 Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: order.plates
                       .map((plate) => Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Plato ${plate.plateNumber}',
+                                'Plato ${plate.plateNumber + 1}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   fontSize: textSize,
@@ -202,24 +74,13 @@ class _HomePageScreenState extends State<HomePageScreen> {
                                       (product.amount *
                                           (product.selectedProduct?.price ??
                                               0));
-                                  return Column(
-                                    children: [
-                                      if (product.comment == '' ||
-                                          product.comment == null)
-                                        Text(
-                                          '    + ${product.amount} ${product.selectedProduct?.name}',
-                                          style: TextStyle(
-                                            fontSize: textSize,
-                                          ),
-                                        )
-                                      else
-                                        Text(
-                                          '    + ${product.amount} ${product.selectedProduct?.name} [ ${product.comment} ]',
-                                          style: TextStyle(
-                                            fontSize: textSize,
-                                          ),
-                                        )
-                                    ],
+                                  return Text(
+                                    product.comment == null
+                                        ? '    + ${product.amount} ${product.selectedProduct?.name}'
+                                        : '    + ${product.amount} ${product.selectedProduct?.name} [ ${product.comment} ]',
+                                    style: TextStyle(
+                                      fontSize: textSize,
+                                    ),
                                   );
                                 }).toList(),
                               )
@@ -230,8 +91,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
                 const SizedBox(height: 20),
                 Center(
                   child: Text(
-                    '\$$totalPrice',
+                    'Total: \$$totalPrice',
                     style: TextStyle(
+                      fontWeight: FontWeight.w800,
                       fontSize: textSize,
                     ),
                   ),
@@ -262,14 +124,14 @@ class _HomePageScreenState extends State<HomePageScreen> {
         final orders = snapshot.data?.docs.map((doc) {
               final data = doc.data() as Map<String, dynamic>;
               return OrderModel.firebase(
-                data['customerName'],
-                OrderTypeModel.fromMap(data['orderType']),
-                (data['plates'] as List)
-                    .map((plate) => PlateModel.fromMap(plate))
-                    .toList(),
-                data['register'],
-                data['estado'],
-              );
+                  data['customerName'],
+                  OrderTypeModel.fromMap(data['orderType']),
+                  (data['plates'] as List)
+                      .map((plate) => PlateModel.fromMap(plate))
+                      .toList(),
+                  data['register'],
+                  data['estado'],
+                  doc.id);
             }).toList() ??
             [];
         return SingleChildScrollView(
