@@ -145,18 +145,36 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     return Scaffold(
+      // AGREGAR NUEVO PLATO
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            int lastPlate = order.length;
-            if (order[lastPlate - 1].productsOrdered[0].selectedProduct ==
-                null) {
+            int lastPlate = order.length - 1;
+            int lastProductInLastPlate =
+                order[lastPlate].productsOrdered.length - 1;
+            // Si no hay ningun producto en el plato, no puede crear otro plato
+            if (order[lastPlate].productsOrdered[0].selectedProduct == null) {
               messenger.hideCurrentSnackBar();
               messenger.showSnackBar(
                 SnackBar(
                   content: Center(
                     child: Text(
-                      "Agrega al menos un producto al plato $lastPlate",
+                      "Agrega al menos un producto al plato ${lastPlate + 1}",
+                    ),
+                  ),
+                ),
+              );
+            } else if (order[lastPlate]
+                    .productsOrdered[lastProductInLastPlate]
+                    .selectedProduct ==
+                null) {
+              // Si no hay ningun producto elegido en el ultimo input de producto
+              messenger.hideCurrentSnackBar();
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Center(
+                    child: Text(
+                      "Selecciona un producto o eliminalo",
                     ),
                   ),
                 ),
@@ -179,10 +197,10 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                     curve: Curves.easeInOut);
               });
 
-              print('TAMAÑO DE LA LISTA ORDER = ${order.length}');
+              /* print('TAMAÑO DE LA LISTA ORDER = ${order.length}');
               for (var i = 0; i < order.length; i++) {
                 print('PLATO[$i] = ${order[i].plateNumber}');
-              }
+              } */
             }
           });
         },
@@ -210,6 +228,9 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
           // GUARDAR ORDEN
           IconButton(
             onPressed: () {
+              int lastPlate = order.length - 1;
+              int lastProductInLastPlate =
+                  order[lastPlate].productsOrdered.length - 1;
               // Si el producto 1 del plato 1 de la orden es null, entonces no se ha seleccionado ningun producto en la orden.
               if (_customerNameController.text == '' ||
                   selectedOptionOrderType == null ||
@@ -219,6 +240,21 @@ class _TakeOrdersScreenState extends State<TakeOrdersScreen> {
                   const SnackBar(
                     content: Center(child: Text("Rellena todos los campos")),
                     duration: Duration(seconds: 2),
+                  ),
+                );
+              } else if (order[lastPlate]
+                      .productsOrdered[lastProductInLastPlate]
+                      .selectedProduct ==
+                  null) {
+                // Si no hay ningun producto elegido en el ultimo input de producto
+                messenger.hideCurrentSnackBar();
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Center(
+                      child: Text(
+                        "Selecciona un producto o eliminalo",
+                      ),
+                    ),
                   ),
                 );
               } else {
